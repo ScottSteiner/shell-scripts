@@ -1,0 +1,6 @@
+caps.sh		Take screencaps of a movie file.  Edited version based on http://www.angelfire.com/planet/moviecaps/
+color.sh	Shows the output of standard colour codes.  Got it off IRC.
+fetch.sh	Grabs a 4chan thread and all of its images, thumbnails and fullsized, and saves them to a directory
+france.pl	Displays the indignation of a Frenchman.
+sex.pl		The most erotic script on github.  Adapted from sex.cpp
+sysinfo.sh	System info script for GNU/Linux based operating systems 
