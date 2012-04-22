@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright (c) 2009-2012 ScottSteiner <nothingfinerthanscottsteiner@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
