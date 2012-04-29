@@ -5,4 +5,5 @@ color.sh	Shows the output of standard colour codes.  Got it off IRC.
 fetch.sh	Grabs a 4chan thread and all of its images, thumbnails and fullsized, and saves them to a directory
 france.pl	Displays the indignation of a Frenchman.
 sex.pl		The most erotic script on github.  Adapted from sex.cpp
+splittext.pl	Splits text into <2000 character sections for pasting in a wiki
 sysinfo.sh	System info script for GNU/Linux based operating systems 
