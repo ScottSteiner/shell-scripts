@@ -26,6 +26,7 @@ case "$board" in
 		mv $savepath$board-$thread/$thread $savepath$board-$thread/index.html
 	;;
         *)
-        echo -e "/$board/ doesn't exist yet."
-        exit 1;;
+	        echo -e "/$board/ doesn't exist yet."
+        	exit 1
+	;;
 esac
