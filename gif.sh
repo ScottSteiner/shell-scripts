@@ -43,6 +43,9 @@ starttext=`echo $start|sed 's/:/./g'`
 
 if [ "$fps" = "videofps" ]; then
 	fps=`avconv -i "$filename" 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"`
+	if [ -z "$fps" ]; then
+		fps=24
+	fi
 fi
 
 mkdir -p "/tmp/gif-$filename-$starttext"
