@@ -19,7 +19,7 @@
 #Default settings
 fps="videofps"		#Sets the default FPS to the FPS of the video. Change to a number or override with --fps or -f
 size=25%		#Sets the default size of the output file. Override with --size or -s
-output=~/media/Misc/	#Sets the default location of the output file. Override with --output or -o
+outputdirectory=~/media/Misc/	#Sets the default location of the output file. Override with --output or -o
 comment="Made with gif.sh\nhttps://github.com/ScottSteiner/shell-scripts" #Sets the default comment on the GIF. Override with --comment or -c
 command="avconv"	#Sets the default player to avconv (no subs).  Replace with mplayer to have subs or override with --mplayer
 
@@ -55,5 +55,5 @@ case $command in
 	mplayer) mplayer -really-quiet -subfont-text-scale 10 -ao null -vo jpeg:outdir="/tmp/gif-$filename-$starttext/" -ss $start -endpos $duration "$filename";;
 	*) avconv -v error -ss $start -i "$filename" -vsync 1 -an -y -t $duration "/tmp/gif-$filename-$starttext/frame%05d.jpg";;
 esac
-convert -comment "$comment" -resize $size -coalesce -layers optimizeplus -loop 0 -delay 1x$fps "/tmp/gif-$filename-$starttext/*.jpg" "/$output/$filename-$starttext.gif"
+convert -comment "$comment" -resize $size -coalesce -layers optimizeplus -loop 0 -delay 1x$fps "/tmp/gif-$filename-$starttext/*.jpg" "$outputdirectory$filename-$starttext.gif"
 rm -rf "/tmp/gif-$filename-$starttext"
