@@ -17,6 +17,6 @@
 # https://github.com/ScottSteiner/shell-scripts
 import sys, simplejson, urllib, os
 url = sys.argv[1] + "?skin=json"
-downloadurl = simplejson.loads(urllib.urlopen(url).read().replace("]);","").replace("blip_ws_results([{","{"))["Post"]["mediaUrl"]
+downloadurl = simplejson.loads(urllib.urlopen(url).read().replace("]);","").replace("blip_ws_results([{","{"))["Post"]["media"]["url"]
 filename = "~/media/Misc/TV/" + downloadurl.split('/')[-1].split('#')[0].split('?')[0]
 urllib.urlretrieve(downloadurl, os.path.expandvars(os.path.expanduser(filename)))
