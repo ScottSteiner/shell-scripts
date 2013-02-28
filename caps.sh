@@ -20,6 +20,8 @@ NUM_COLS=4
 NUM_CAPS=16
 RESIZE_SPEC=245x245
 SPACING=4
+SHADOW=-shadow
+BORDER=2
 unset CROP_SPEC DO_PAUSE
 
 function debug () {
@@ -55,7 +57,11 @@ Usage: `basename $0` [OPTIONS] <filename of the movie>
  -x, --no-timestamps                       Don't write timestamps into the screencaps.
  -f, --fontsize <fontsite in pixels>       Default is ${DEFAULT_FS}.
 
- -l, --columns <number of columns>         Number of columns the final picture sheets should have (default: $NUM_COLS).
+     --noshadow                            Disables the shadow effect
+ -b, --border <border thickness>           Sets the border thickness (default: ${BORDER}).
+
+ -g, --spacing <spacing>                   Number of pixels between screencaps (default: ${SPACING}).
+ -l, --columns <number of columns>         Number of columns the final picture sheets should have (default: ${NUM_COLS}).
      --pause                               Wait before composing the final picture. You may modify or delete some of the
                                            screencaps before they are composed into the final image.
      --dont-delete-caps                    Do not delete the screen captures afterwards.
@@ -76,8 +82,8 @@ done
 
 # Parse the arguments
 TEMP_OPT=`getopt -a \
-          -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l: \
-	  --long end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,pause,dont-delete-caps \
+          -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
+	  --long end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border: \
 	  -- "$@"`
 
 if [ $? != 0 ]; then 
@@ -101,6 +107,9 @@ while true ; do
     -a|--autocrop|-autocrop)	AUTOCROP=1; shift 1;;
     -x|--no-timestamps|-no-timestamps)	NO_TIMESTAMPS=1; shift 1;;
     -l|--columns|-column)	NUM_COLS=$2; shift 2;;
+    -g|--spacing|-spacing)	SPACING=$2; shift 2;;
+       --noshadow|noshadow)     unset SHADOW; shift 1;;
+    -b|--border|border)         BORDER=$2; shift 2;;
        --pause|-pause)		DO_PAUSE=1; shift 1;;
        --dont-delete-caps|-dont-delete-caps)	DO_NOT_DELETE_CAPS=1; shift 1;;
     -h|--help|-help)		print_help; exit 0;;
@@ -236,7 +245,7 @@ MOVIEFILESIZEHUMAN=`echo $MOVIEFILESIZE | awk '{ split( "B KB MB GB TB PB EB ZB 
 MOVIEFILESIZE=`echo $MOVIEFILESIZE | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'`
 LABEL="File Name: ${MOVIEFILENAME}\nFile Size: ${MOVIEFILESIZEHUMAN} (${MOVIEFILESIZE} bytes)\nResolution: $MOVIERESOLUTION\nDuration: ${MOVIELENGTH}"
 
-montage  -background none -border 2 -bordercolor black -geometry +${SPACING}+${SPACING} -shadow -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
+montage  -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
 convert "/tmp/montage.png" -gravity NorthWest -background none -density 100 -splice 0x80 -pointsize 12 -annotate +5+2 "${LABEL}" -background "#EAEAEA" -append -layers merge "${OUTPUT_FILE}"
 # Delete the screen captures
 if [ -z $DO_NOT_DELETE_CAPS ] ; then
