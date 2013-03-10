@@ -43,6 +43,7 @@ cat <<EOF
 
 Usage: `basename $0` [OPTIONS] <filename of the movie>
      --grid                                Plain 3x3 grid of screencaps. Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps
+     --biggrid                             Big 20x20 grid of screencaps. Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps --scale .20 --resize 100%
 
  -o, --offset <start in seconds>           Start capturing here (default: 0).
  -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing an movielength-value.
@@ -87,7 +88,7 @@ done
 # Parse the arguments
 TEMP_OPT=`getopt -a \
           -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
-	  --long grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
+	  --long biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
 	  -- "$@"`
 
 if [ $? != 0 ]; then 
@@ -115,6 +116,7 @@ while true ; do
        --noshadow|-noshadow)    unset SHADOW; shift 1;;
        --noheader|-noheader)    DO_NOT_ADD_HEADER=1; shift 1;;
        --grid|-grid)            DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=9;NUM_COLS=3;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
+       --biggrid|-biggrid)      SCALE_FACTOR=.20;RESIZE_SPEC=100%;DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=100;NUM_COLS=10;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
     -b|--border|border)         BORDER=$2; shift 2;;
        --pause|-pause)		DO_PAUSE=1; shift 1;;
        --dont-delete-caps|-dont-delete-caps)	DO_NOT_DELETE_CAPS=1; shift 1;;
