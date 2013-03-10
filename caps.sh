@@ -195,7 +195,7 @@ fi
 ## End: Argument Parsing
 
 declare -a SCREENCAPS
-echo "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: 00%"
+echo -n "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: 00%"
 for i in `seq 1 $(($STEPS))`
 do
   # extract picture from movie
