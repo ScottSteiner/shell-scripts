@@ -195,7 +195,7 @@ fi
 ## End: Argument Parsing
 
 declare -a SCREENCAPS
-echo "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: 00%""
+echo "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: 00%"
 for i in `seq 1 $(($STEPS))`
 do
   # extract picture from movie
@@ -245,9 +245,14 @@ OUTPUT_FILE=${MOVIEFILENAME}
 for i in .avi .mpg .mpeg .mp4 .vob .vcd .ogm .mkv .webm; do
   OUTPUT_FILE=`basename "${OUTPUT_FILE}" $i`
 done
+if [ $NUM_COLS -ne 4 ] || [ $NUM_CAPS -ne 16 ] ; then
+  ROWS="$NUM_CAPS/$NUM_COLS"
+  ROWS=`echo "scale=0; $ROWS" | bc -l`
+  OUTPUT_FILE="$OUTPUT_FILE ${NUM_COLS}x${ROWS}"
+fi
 OUTPUT_FILE="/www/netshare/${OUTPUT_FILE}.jpg"
 
-montage  -background none -border ${BORDER} -bordercolor green -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
+montage  -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
 if [ -z $DO_NOT_ADD_HEADER ] ; then
   MOVIEFILESIZE=$(stat -c%s "$MOVIEFILENAME")
   MOVIEFILESIZEHUMAN=`echo $MOVIEFILESIZE | awk '{ split( "B KB MB GB TB PB EB ZB YB" , v ); s=1; while( $1>=1024 ){ $1/=1024; s++ } print int($1) v[s] }'`
