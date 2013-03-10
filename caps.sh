@@ -195,7 +195,7 @@ fi
 ## End: Argument Parsing
 
 declare -a SCREENCAPS
-echo "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: "
+echo "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: 00%""
 for i in `seq 1 $(($STEPS))`
 do
   # extract picture from movie
@@ -229,7 +229,10 @@ do
   # Append the filename to the array SCREENCAPS
   SCREENCAPS[${#SCREENCAPS[*]}]=$FNAME
 
-  echo -n '*'
+  PERCENT="$i*100/$STEPS"
+  PROGRESS=`echo "scale=0; $PERCENT" | bc -l`
+  PROGRESS=`printf "%02d" $PROGRESS`
+  echo -en "\b\b\b$PROGRESS%"
 done
 
 if [ ! -z $DO_WAIT ]; then
