@@ -18,7 +18,7 @@ SCALE_FACTOR=1
 PREFIX="/tmp/cap_"
 NUM_COLS=4
 NUM_CAPS=16
-RESIZE_SPEC=245x245
+RESIZE_SPEC=500x500
 SPACING=4
 SHADOW=-shadow
 BORDER=2
@@ -41,6 +41,8 @@ function print_help () {
 cat <<EOF
 
 Usage: `basename $0` [OPTIONS] <filename of the movie>
+     --grid                                Plain 3x3 grid of screencaps. Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps
+
  -o, --offset <start in seconds>           Start capturing here (default: 0).
  -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing an movielength-value.
  -i, --interval <time between screencaps>  Interval between screencaps (default: ${DEFAULT_INTERVAL}).
@@ -84,7 +86,7 @@ done
 # Parse the arguments
 TEMP_OPT=`getopt -a \
           -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
-	  --long end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
+	  --long grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
 	  -- "$@"`
 
 if [ $? != 0 ]; then 
@@ -111,6 +113,7 @@ while true ; do
     -g|--spacing|-spacing)	SPACING=$2; shift 2;;
        --noshadow|-noshadow)    unset SHADOW; shift 1;;
        --noheader|-noheader)    DO_NOT_ADD_HEADER=1; shift 1;;
+       --grid|-grid)            DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=9;NUM_COLS=3;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
     -b|--border|border)         BORDER=$2; shift 2;;
        --pause|-pause)		DO_PAUSE=1; shift 1;;
        --dont-delete-caps|-dont-delete-caps)	DO_NOT_DELETE_CAPS=1; shift 1;;
@@ -215,10 +218,8 @@ do
     POSITION=$(($OFFSET+$i*$INTERVAL))
     TIMESTAMP=`printf "%02d:%02d:%02d" $((($POSITION/3600)%24)) $((($POSITION/60)%60)) $(($POSITION%60))`
     # insert timestamp
-    convert /tmp/00000001.jpg -gravity SouthEast \
-                         -pointsize $FONTSIZE \
-			 -stroke '#000' -strokewidth 2 -annotate +1-1 "$TIMESTAMP" \
-			 -stroke none -fill '#fff' -annotate +1-1 "$TIMESTAMP" /tmp/00000001.jpg
+    convert /tmp/00000001.jpg -gravity SouthEast -pointsize $FONTSIZE \
+	-stroke '#000' -strokewidth 2 -annotate +1-1 "$TIMESTAMP" -stroke none -fill '#fff' -annotate +1-1 "$TIMESTAMP" /tmp/00000001.jpg
   fi
 
   # rename captured picture to prefix_seqnum.jpg
@@ -238,18 +239,19 @@ fi
 
 # Strip the extension from the movie's filename and append .jpg
 OUTPUT_FILE=${MOVIEFILENAME}
-for i in .avi .mpg .mpeg .mp4 .vob .vcd .ogm .mkv ; do
+for i in .avi .mpg .mpeg .mp4 .vob .vcd .ogm .mkv .webm; do
   OUTPUT_FILE=`basename "${OUTPUT_FILE}" $i`
 done
 OUTPUT_FILE="/www/netshare/${OUTPUT_FILE}.jpg"
-MOVIEFILESIZE=$(stat -c%s "$MOVIEFILENAME")
-MOVIEFILESIZEHUMAN=`echo $MOVIEFILESIZE | awk '{ split( "B KB MB GB TB PB EB ZB YB" , v ); s=1; while( $1>=1024 ){ $1/=1024; s++ } print int($1) v[s] }'`
-MOVIEFILESIZE=`echo $MOVIEFILESIZE | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'`
-LABEL="File Name: ${MOVIEFILENAME}\nFile Size: ${MOVIEFILESIZEHUMAN} (${MOVIEFILESIZE} bytes)\nResolution: $MOVIERESOLUTION\nDuration: ${MOVIELENGTH}"
 
-montage  -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
+montage  -background none -border ${BORDER} -bordercolor green -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
 if [ -z $DO_NOT_ADD_HEADER ] ; then
-  convert "/tmp/montage.png"  -gravity NorthWest -background none -density 100 -splice 0x80 -pointsize 12 -annotate +5+2 "${LABEL}" -background "#EAEAEA" -append -layers merge "${OUTPUT_FILE}"
+  MOVIEFILESIZE=$(stat -c%s "$MOVIEFILENAME")
+  MOVIEFILESIZEHUMAN=`echo $MOVIEFILESIZE | awk '{ split( "B KB MB GB TB PB EB ZB YB" , v ); s=1; while( $1>=1024 ){ $1/=1024; s++ } print int($1) v[s] }'`
+  MOVIEFILESIZE=`echo $MOVIEFILESIZE | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'`
+  LABEL="File Name: ${MOVIEFILENAME}\nFile Size: ${MOVIEFILESIZEHUMAN} (${MOVIEFILESIZE} bytes)\nResolution: $MOVIERESOLUTION\nDuration: ${MOVIELENGTH}"
+  convert "/tmp/montage.png" -gravity NorthWest -background none -density 100 -splice 0x80\
+	-pointsize 12 -annotate +5+2 "${LABEL}" -background "#EAEAEA" -append -layers merge "${OUTPUT_FILE}"
 else
   convert "/tmp/montage.png" "${OUTPUT_FILE}"
 fi
