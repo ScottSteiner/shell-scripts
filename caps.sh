@@ -11,6 +11,7 @@ VERSION="0.5"
 SVN_VERSION="\$Revision: 18 $"
 
 # Set default values
+OUTPUT_DIRECTORY="/www/netshare/"
 OFFSET=0
 INTERVAL=$DEFAULT_INTERVAL
 FONTSIZE=$DEFAULT_FS
@@ -250,7 +251,7 @@ if [ $NUM_COLS -ne 4 ] || [ $NUM_CAPS -ne 16 ] ; then
   ROWS=`echo "scale=0; $ROWS" | bc -l`
   OUTPUT_FILE="$OUTPUT_FILE ${NUM_COLS}x${ROWS}"
 fi
-OUTPUT_FILE="/www/netshare/${OUTPUT_FILE}.jpg"
+OUTPUT_FILE="${OUTPUT_DIRECTORY}${OUTPUT_FILE}.jpg"
 
 montage  -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
 if [ -z $DO_NOT_ADD_HEADER ] ; then
