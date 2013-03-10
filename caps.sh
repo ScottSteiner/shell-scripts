@@ -91,7 +91,7 @@ TEMP_OPT=`getopt -a \
 	  --long biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
 	  -- "$@"`
 
-if [ $? != 0 ]; then 
+if [ $? != 0 ]; then
   echo "Error executing getopt. Terminating..." >&2
   exit 1
 fi
@@ -168,7 +168,7 @@ function get_movie_info () {
 
 # Handle -e
 if [ -z $LENGTH ]; then
-  # aquire length of the movie
+  # acquire length of the movie
   get_movie_info
 fi
 if [ $LENGTH -le 0 ]; then
