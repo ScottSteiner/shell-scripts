@@ -255,18 +255,18 @@ if [ $NUM_COLS -ne 4 ] || [ $NUM_CAPS -ne 16 ] ; then
 fi
 OUTPUT_FILE="${OUTPUT_DIRECTORY}${OUTPUT_FILE}.jpg"
 
-montage -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.jpg"
+montage -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
 if [ -z $DO_NOT_ADD_HEADER ] ; then
   MOVIEFILESIZE=$(stat -c%s "$MOVIEFILENAME")
   MOVIEFILESIZEHUMAN=`echo $MOVIEFILESIZE | awk '{ split( "B KB MB GB TB PB EB ZB YB" , v ); s=1; while( $1>=1024 ){ $1/=1024; s++ } print int($1) v[s] }'`
   MOVIEFILESIZE=`echo $MOVIEFILESIZE | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'`
   LABEL="File Name: ${MOVIEFILENAME}\nFile Size: ${MOVIEFILESIZEHUMAN} (${MOVIEFILESIZE} bytes)\nResolution: $MOVIERESOLUTION\nDuration: ${MOVIELENGTH}"
-  convert "/tmp/montage.jpg" -gravity NorthWest -background none -density 100 -splice 0x80\
+  convert "/tmp/montage.png" -gravity NorthWest -background none -density 100 -splice 0x80\
 	-pointsize 12 -annotate +5+2 "${LABEL}" -background "#EAEAEA" -append -layers merge "${OUTPUT_FILE}"
-  rm /tmp/montage.jpg
 else
-  mv "/tmp/montage.jpg" "${OUTPUT_FILE}"
+  convert "/tmp/montage.png" "${OUTPUT_FILE}"
 fi
+  rm /tmp/montage.png
 
 # Delete the screen captures
 if [ -z $DO_NOT_DELETE_CAPS ] ; then
