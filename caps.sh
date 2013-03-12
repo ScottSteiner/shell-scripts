@@ -42,8 +42,10 @@ function print_help () {
 cat <<EOF
 
 Usage: `basename $0` [OPTIONS] <filename of the movie>
-     --grid                                Plain 3x3 grid of screencaps. Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps
-     --biggrid                             Big 20x20 grid of screencaps. Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps --scale .20 --resize 100%
+     --grid                                Plain 3x3 grid of screencaps.
+                                           Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps
+     --biggrid                             Big 20x20 grid of screencaps.
+                                           Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps --scale .20 --resize 100%
 
  -o, --offset <start in seconds>           Start capturing here (default: 0).
  -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing an movielength-value.
@@ -56,7 +58,7 @@ Usage: `basename $0` [OPTIONS] <filename of the movie>
  -r, --resize <resize-spec>                Resize the images using Imagemagick. See ImageMagick(1) details.
  -a, --autocrop                            Trim the picture's edges via an simple heuristic.
 
- -p, --prefix <prefix>                     Prefix of the screencaps (default: ${DEFAULT_PREFIX}).
+ -p, --prefix <prefix>                     Prefix of the screencaps (default: ${PREFIX}).
 
  -x, --no-timestamps                       Don't write timestamps into the screencaps.
  -f, --fontsize <fontsite in pixels>       Default is ${DEFAULT_FS}.
@@ -70,6 +72,7 @@ Usage: `basename $0` [OPTIONS] <filename of the movie>
      --pause                               Wait before composing the final picture. You may modify or delete some of the
                                            screencaps before they are composed into the final image.
      --dont-delete-caps                    Do not delete the screen captures afterwards.
+     --output                              Sets the output directory (default: ${OUTPUT_DIRECTORY})
 
  -h, --help                                Print this message and exit.
  -V, --version                             Print the version and exit.
@@ -88,7 +91,7 @@ done
 # Parse the arguments
 TEMP_OPT=`getopt -a \
           -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
-	  --long biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
+	  --long output:,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
 	  -- "$@"`
 
 if [ $? != 0 ]; then
@@ -101,6 +104,7 @@ eval set -- "$TEMP_OPT"
 while true ; do
   case "$1" in
     -o|--offset|-offset)	OFFSET=$2; shift 2;;
+       --output|-output)        OUTPUT_DIRECTORY=$2; shift 2;;
     -e|--end|-end)		LENGTH=$2; shift 2;;
     -i|--interval|-interval)	INTERVAL=$2; shift 2;;
     -n|--number|-number)	NUM_CAPS=$2; shift 2;;
@@ -116,7 +120,7 @@ while true ; do
        --noshadow|-noshadow)    unset SHADOW; shift 1;;
        --noheader|-noheader)    DO_NOT_ADD_HEADER=1; shift 1;;
        --grid|-grid)            DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=9;NUM_COLS=3;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
-       --biggrid|-biggrid)      SCALE_FACTOR=.20;RESIZE_SPEC=100%;DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=100;NUM_COLS=10;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
+       --biggrid|-biggrid)      SCALE_FACTOR=.40;RESIZE_SPEC=100%;DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=100;NUM_COLS=10;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
     -b|--border|border)         BORDER=$2; shift 2;;
        --pause|-pause)		DO_PAUSE=1; shift 1;;
        --dont-delete-caps|-dont-delete-caps)	DO_NOT_DELETE_CAPS=1; shift 1;;
