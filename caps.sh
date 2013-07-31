@@ -13,6 +13,7 @@ SVN_VERSION="\$Revision: 18 $"
 # Set default values
 OUTPUT_DIRECTORY="/www/netshare/"
 OFFSET=0
+BACKOFFSET=6 #Percentage
 INTERVAL=$DEFAULT_INTERVAL
 FONTSIZE=$DEFAULT_FS
 SCALE_FACTOR=1
@@ -28,6 +29,7 @@ unset CROP_SPEC DO_PAUSE
 function debug () {
 cat <<EOF
 OFFSET       = ${OFFSET}
+BACKOFFSET   = ${BACKOFFSET}
 LENGTH       = ${LENGTH}
 INTERVAL     = ${INTERVAL}
 NUM_CAPS     = ${NUM_CAPS}
@@ -44,8 +46,9 @@ cat <<EOF
 Usage: `basename $0` [OPTIONS] <filename of the movie>
      --grid                                Plain 3x3 grid of screencaps.
                                            Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps
-     --biggrid                             Big 20x20 grid of screencaps.
-                                           Same as --noshadow --noheader --spacing 0 --columns 3 --number 3 --border 0 --no-timestamps --scale .20 --resize 100%
+     --biggrid                             Big 10x10 grid of screencaps.
+                                           Same as --noshadow --noheader --spacing 0 --columns 10 --number 10 --border 0 --no-timestamps --scale .20
+     --hugegrid                            Huge grid constrained to 5000 pixels
 
  -o, --offset <start in seconds>           Start capturing here (default: 0).
  -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing an movielength-value.
@@ -91,7 +94,7 @@ done
 # Parse the arguments
 TEMP_OPT=`getopt -a \
           -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
-	  --long output:,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
+	  --long output:,hugegrid,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
 	  -- "$@"`
 
 if [ $? != 0 ]; then
@@ -120,7 +123,8 @@ while true ; do
        --noshadow|-noshadow)    unset SHADOW; shift 1;;
        --noheader|-noheader)    DO_NOT_ADD_HEADER=1; shift 1;;
        --grid|-grid)            DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=9;NUM_COLS=3;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
-       --biggrid|-biggrid)      SCALE_FACTOR=.40;RESIZE_SPEC=100%;DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=100;NUM_COLS=10;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
+       --biggrid|-biggrid)      SCALE_FACTOR=.40;DO_NOT_ADD_HEADER=1; unset SHADOW;NUM_CAPS=100;NUM_COLS=10;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
+       --hugegrid|-biggrid)     HUGEGRID=1;DO_NOT_ADD_HEADER=1; unset SHADOW;BORDER=0;SPACING=0;NO_TIMESTAMPS=1; shift 1;;
     -b|--border|border)         BORDER=$2; shift 2;;
        --pause|-pause)		DO_PAUSE=1; shift 1;;
        --dont-delete-caps|-dont-delete-caps)	DO_NOT_DELETE_CAPS=1; shift 1;;
@@ -169,7 +173,6 @@ function get_movie_info () {
   esac
   MOVIERESOLUTION="${ID_VIDEO_WIDTH}x${ID_VIDEO_HEIGHT}${MOVIEASPECTRATIO}"
 }
-
 # Handle -e
 if [ -z $LENGTH ]; then
   # acquire length of the movie
@@ -180,8 +183,15 @@ if [ $LENGTH -le 0 ]; then
   get_movie_info
   LENGTH=$(($LENGTH+$BACK_OFFSET))
 fi
-CAPTURE_LEN=$(($LENGTH-$OFFSET))
+if [ -n "$HUGEGRID" ]; then
+  RESIZE_SPEC=200x200
+  RESIZE_HEIGHT=$(( ${ID_VIDEO_HEIGHT}*200/${ID_VIDEO_WIDTH} ))
+  NUM_COLS=$(( 5000/200 ))
+  NUM_ROWS=$(( 5000/$RESIZE_HEIGHT ))
+  NUM_CAPS=$(( $NUM_ROWS*$NUM_COLS ))
+fi
 
+CAPTURE_LEN=$(( ($LENGTH*(100-$BACKOFFSET)/100)-$OFFSET ))
 # if -n is not given...
 if [ -z $NUM_CAPS ]; then
   # calculate STEPS using INTERVAL
@@ -189,9 +199,8 @@ if [ -z $NUM_CAPS ]; then
 else
   # calculate INTERVAL using NUM_CAPS
   STEPS=${NUM_CAPS}
-  INTERVAL=$((${CAPTURE_LEN}/(${STEPS}+1)))
+  INTERVAL=`echo "scale=5; ${CAPTURE_LEN}/${STEPS}" | bc`
 fi
-
 # construct parameters for scaling
 if [ ${SCALE_FACTOR} == 1 ]; then
   SCALE_OPTS=""
@@ -202,11 +211,12 @@ fi
 ## End: Argument Parsing
 
 declare -a SCREENCAPS
-echo -n "Making $STEPS screencaps, beginning at $OFFSET seconds and stopping at $LENGTH seconds: 00%"
+echo -n "Making $STEPS screencaps in ${INTERVAL}s intervals, beginning at $OFFSET seconds and stopping at $CAPTURE_LEN seconds:  00% (0/$STEPS)"
 for i in `seq 1 $(($STEPS))`
 do
+  POSITION=`printf "%.0f" $(echo "scale=2;$OFFSET+$i*$INTERVAL" | bc)`
   # extract picture from movie
-  mplayer -really-quiet -ao null -vo jpeg:quality=100:outdir=/tmp/ -ss $(($OFFSET+$i*$INTERVAL)) -frames 1 $SCALE_OPTS "${MOVIEFILENAME}" > /dev/null 2> /dev/null
+  mplayer -really-quiet -ao null -vo jpeg:quality=100:outdir=/tmp/ -ss $POSITION -frames 1 $SCALE_OPTS "${MOVIEFILENAME}" > /dev/null 2> /dev/null
   # crop the picture
   if [ ! -z $CROP_SPEC ]; then
     mogrify -crop ${CROP_SPEC} /tmp/00000001.jpg
@@ -222,7 +232,6 @@ do
   # Insert timestamp
   if [ -z $NO_TIMESTAMPS ]; then
     # calculate current offset in seconds
-    POSITION=$(($OFFSET+$i*$INTERVAL))
     TIMESTAMP=`printf "%02d:%02d:%02d" $((($POSITION/3600)%24)) $((($POSITION/60)%60)) $(($POSITION%60))`
     # insert timestamp
     convert /tmp/00000001.jpg -gravity SouthEast -pointsize $FONTSIZE \
@@ -238,8 +247,10 @@ do
 
   PERCENT="$i*100/$STEPS"
   PROGRESS=`echo "scale=0; $PERCENT" | bc -l`
-  PROGRESS=`printf "%02d" $PROGRESS`
-  echo -en "\b\b\b$PROGRESS%"
+  PROGRESS=`printf "%02d%% ($i/$STEPS)" $PROGRESS`
+  PROGRESSLENGTH=`expr length "$PROGRESS"`
+  BACKSPACES=`eval printf '\\\b%.0s' {1..$PROGRESSLENGTH}`
+  echo -en "$BACKSPACES$PROGRESS"
 done
 
 if [ ! -z $DO_WAIT ]; then
