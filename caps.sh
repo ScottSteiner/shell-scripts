@@ -7,17 +7,19 @@
 # Default values
 DEFAULT_INTERVAL=30
 DEFAULT_FS=16
-VERSION="0.5"
-SVN_VERSION="\$Revision: 18 $"
+VERSION="0.6"
+SVN_VERSION="\$Revision: 19 $"
 
 # Set default values
-OUTPUT_DIRECTORY="/www/netshare/"
+OUTPUT_DIRECTORY="/media/samba/Misc/Caps/"
 OFFSET=0
 BACKOFFSET=6 #Percentage
+MAXIMUM_FILESIZE=3072kb
 INTERVAL=$DEFAULT_INTERVAL
 FONTSIZE=$DEFAULT_FS
 SCALE_FACTOR=1
-PREFIX="/tmp/cap_"
+TEMP=`mktemp -d`
+PREFIX="${TEMP}/cap_"
 NUM_COLS=4
 NUM_CAPS=16
 RESIZE_SPEC=500x500
@@ -50,7 +52,8 @@ Usage: `basename $0` [OPTIONS] <filename of the movie>
                                            Same as --noshadow --noheader --spacing 0 --columns 10 --number 10 --border 0 --no-timestamps --scale .20
      --hugegrid                            Huge grid constrained to 5000 pixels
 
- -o, --offset <start in seconds>           Start capturing here (default: 0).
+ -o, --offset <start in seconds>           Start capturing here (default: ${OFFSET}).
+ -k, --backoffset <end in percentage>      End capturing here (default: ${BACKOFFSET}%).
  -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing an movielength-value.
  -i, --interval <time between screencaps>  Interval between screencaps (default: ${DEFAULT_INTERVAL}).
  -n, --number <number of screencaps>       Specify how many screencaps should be taken. This overwrites -i.
@@ -93,8 +96,8 @@ done
 
 # Parse the arguments
 TEMP_OPT=`getopt -a \
-          -o e:,o:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
-	  --long output:,hugegrid,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader \
+          -o e:,o:,k:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
+	  --long output:,hugegrid,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader,backoffset: \
 	  -- "$@"`
 
 if [ $? != 0 ]; then
@@ -107,6 +110,7 @@ eval set -- "$TEMP_OPT"
 while true ; do
   case "$1" in
     -o|--offset|-offset)	OFFSET=$2; shift 2;;
+    -k|--backoffset|-backoffset)BACKOFFSET=$2; shift 2;;
        --output|-output)        OUTPUT_DIRECTORY=$2; shift 2;;
     -e|--end|-end)		LENGTH=$2; shift 2;;
     -i|--interval|-interval)	INTERVAL=$2; shift 2;;
@@ -216,17 +220,17 @@ for i in `seq 1 $(($STEPS))`
 do
   POSITION=`printf "%.0f" $(echo "scale=2;$OFFSET+$i*$INTERVAL" | bc)`
   # extract picture from movie
-  mplayer -really-quiet -ao null -vo jpeg:quality=100:outdir=/tmp/ -ss $POSITION -frames 1 $SCALE_OPTS "${MOVIEFILENAME}" > /dev/null 2> /dev/null
+  mplayer -really-quiet -ao null -vo jpeg:quality=100:outdir=${TEMP} -ss $POSITION -frames 1 $SCALE_OPTS "${MOVIEFILENAME}" > /dev/null 2> /dev/null
   # crop the picture
   if [ ! -z $CROP_SPEC ]; then
-    mogrify -crop ${CROP_SPEC} /tmp/00000001.jpg
+    mogrify -crop ${CROP_SPEC} ${TEMP}/00000001.jpg
   fi
   # resize the picture
   if [ ! -z $RESIZE_SPEC ]; then
-    mogrify -resize ${RESIZE_SPEC} /tmp/00000001.jpg
+    mogrify -resize ${RESIZE_SPEC} ${TEMP}/00000001.jpg
   fi
   if [ ! -z $AUTOCROP ]; then
-    mogrify -fuzz 10% -trim /tmp/00000001.jpg
+    mogrify -fuzz 10% -trim ${TEMP}/00000001.jpg
   fi
 
   # Insert timestamp
@@ -234,13 +238,13 @@ do
     # calculate current offset in seconds
     TIMESTAMP=`printf "%02d:%02d:%02d" $((($POSITION/3600)%24)) $((($POSITION/60)%60)) $(($POSITION%60))`
     # insert timestamp
-    convert /tmp/00000001.jpg -gravity SouthEast -pointsize $FONTSIZE \
-	-stroke '#000' -strokewidth 2 -annotate +1-1 "$TIMESTAMP" -stroke none -fill '#fff' -annotate +1-1 "$TIMESTAMP" /tmp/00000001.jpg
+    convert ${TEMP}/00000001.jpg -gravity SouthEast -pointsize $FONTSIZE \
+	-stroke '#000' -strokewidth 2 -annotate +1-1 "$TIMESTAMP" -stroke none -fill '#fff' -annotate +1-1 "$TIMESTAMP" ${TEMP}/00000001.jpg
   fi
 
   # rename captured picture to prefix_seqnum.jpg
   FNAME=`printf "%s%08d.jpg" "${PREFIX}" $i`
-  mv /tmp/00000001.jpg $FNAME
+  mv ${TEMP}/00000001.jpg $FNAME
 
   # Append the filename to the array SCREENCAPS
   SCREENCAPS[${#SCREENCAPS[*]}]=$FNAME
@@ -259,29 +263,33 @@ if [ ! -z $DO_WAIT ]; then
 fi
 
 # Strip the extension from the movie's filename and append .jpg
-OUTPUT_FILE=${MOVIEFILENAME}
-for i in .avi .mpg .mpeg .mp4 .vob .vcd .ogm .mkv .webm; do
+MOVIESHORTFILENAME=`basename "${MOVIEFILENAME}"`
+OUTPUT_FILE=${MOVIESHORTFILENAME}
+
+for i in .avi .mpg .mpeg .mp4 .vob .vcd .ogm .mkv .webm .flv .wmv; do
   OUTPUT_FILE=`basename "${OUTPUT_FILE}" $i`
 done
-if [ $NUM_COLS -ne 4 ] || [ $NUM_CAPS -ne 16 ] ; then
-  ROWS="$NUM_CAPS/$NUM_COLS"
-  ROWS=`echo "scale=0; $ROWS" | bc -l`
+if [ $NUM_COLS -ne 4 ] || [ $NUM_CAPS -ne 16 ]; then
+  if [ $NUM_COLS -gt $NUM_CAPS ]; then
+    NUM_COLS=$NUM_CAPS
+  fi
+  ROWS=$((($NUM_CAPS+($NUM_COLS-1))/$NUM_COLS))
   OUTPUT_FILE="$OUTPUT_FILE ${NUM_COLS}x${ROWS}"
 fi
 OUTPUT_FILE="${OUTPUT_DIRECTORY}${OUTPUT_FILE}.jpg"
 
-montage -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "/tmp/montage.png"
+montage -background none -border ${BORDER} -bordercolor black -geometry +${SPACING}+${SPACING} ${SHADOW} -tile ${NUM_COLS}x ${SCREENCAPS[*]} "${TEMP}/montage.png"
 if [ -z $DO_NOT_ADD_HEADER ] ; then
   MOVIEFILESIZE=$(stat -c%s "$MOVIEFILENAME")
   MOVIEFILESIZEHUMAN=`echo $MOVIEFILESIZE | awk '{ split( "B KB MB GB TB PB EB ZB YB" , v ); s=1; while( $1>=1024 ){ $1/=1024; s++ } print int($1) v[s] }'`
   MOVIEFILESIZE=`echo $MOVIEFILESIZE | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'`
-  LABEL="File Name: ${MOVIEFILENAME}\nFile Size: ${MOVIEFILESIZEHUMAN} (${MOVIEFILESIZE} bytes)\nResolution: $MOVIERESOLUTION\nDuration: ${MOVIELENGTH}"
-  convert "/tmp/montage.png" -gravity NorthWest -background none -density 100 -splice 0x80\
+  LABEL="File Name: ${MOVIESHORTFILENAME}\nFile Size: ${MOVIEFILESIZEHUMAN} (${MOVIEFILESIZE} bytes)\nResolution: $MOVIERESOLUTION\nDuration: ${MOVIELENGTH}"
+  convert "${TEMP}/montage.png" -define jpeg:extent=$MAXIMUM_FILESIZE -gravity NorthWest -background none -density 100 -splice 0x80\
 	-pointsize 12 -annotate +5+2 "${LABEL}" -background "#EAEAEA" -append -layers merge "${OUTPUT_FILE}"
 else
-  convert "/tmp/montage.png" "${OUTPUT_FILE}"
+  convert "${TEMP}/montage.png" -define jpeg:extent=$MAXIMUM_FILESIZE "${OUTPUT_FILE}"
 fi
-  rm /tmp/montage.png
+#rm ${TEMP}/montage.png
 
 # Delete the screen captures
 if [ -z $DO_NOT_DELETE_CAPS ] ; then
