@@ -54,14 +54,14 @@ Usage: `basename $0` [OPTIONS] <filename of the movie>
 
  -o, --offset <start in seconds>           Start capturing here (default: ${OFFSET}).
  -k, --backoffset <end in percentage>      End capturing here (default: ${BACKOFFSET}%).
- -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing an movielength-value.
+ -e, --end <end in seconds>                End capturing here (default: length of the movie). Specifying a negative ends capturing at movielength-value.
  -i, --interval <time between screencaps>  Interval between screencaps (default: ${DEFAULT_INTERVAL}).
  -n, --number <number of screencaps>       Specify how many screencaps should be taken. This overwrites -i.
 
  -s, --scale <scale factor>                Scale the screencaps by this factor (default: no scaling).
 
  -c, --crop <crop-spec>                    Crop the images using Imagemagick. See ImageMagick(1) details.
- -r, --resize <resize-spec>                Resize the images using Imagemagick. See ImageMagick(1) details.
+ -r, --resize <resize-spec>                Resize the images within the boundary of a resolution using Imagemagick. See ImageMagick(1) details.
  -a, --autocrop                            Trim the picture's edges via an simple heuristic.
 
  -p, --prefix <prefix>                     Prefix of the screencaps (default: ${PREFIX}).
@@ -79,6 +79,7 @@ Usage: `basename $0` [OPTIONS] <filename of the movie>
                                            screencaps before they are composed into the final image.
      --dont-delete-caps                    Do not delete the screen captures afterwards.
      --output                              Sets the output directory (default: ${OUTPUT_DIRECTORY})
+     --filename				   Specifies an output filename
 
  -h, --help                                Print this message and exit.
  -V, --version                             Print the version and exit.
@@ -97,7 +98,7 @@ done
 # Parse the arguments
 TEMP_OPT=`getopt -a \
           -o e:,o:,k:,i:,n:,f:,s:,p:,h,V,c:,x,a,l:,g:,b: \
-	  --long output:,hugegrid,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader,backoffset: \
+	  --long output:,filename:,hugegrid,biggrid,grid,end:,offset:,interval:,number:,fontsize:,scale:,prefix:,help,version,crop:,resize:,autocrop,no-timestamps,columns:,spacing:,pause,dont-delete-caps,noshadow,border:,noheader,backoffset: \
 	  -- "$@"`
 
 if [ $? != 0 ]; then
@@ -112,6 +113,7 @@ while true ; do
     -o|--offset|-offset)	OFFSET=$2; shift 2;;
     -k|--backoffset|-backoffset)BACKOFFSET=$2; shift 2;;
        --output|-output)        OUTPUT_DIRECTORY=$2; shift 2;;
+       --filename|-filename)    OUTPUT_FILENAME="$2"; shift 2;;
     -e|--end|-end)		LENGTH=$2; shift 2;;
     -i|--interval|-interval)	INTERVAL=$2; shift 2;;
     -n|--number|-number)	NUM_CAPS=$2; shift 2;;
@@ -275,6 +277,10 @@ if [ $NUM_COLS -ne 4 ] || [ $NUM_CAPS -ne 16 ]; then
   fi
   ROWS=$((($NUM_CAPS+($NUM_COLS-1))/$NUM_COLS))
   OUTPUT_FILE="$OUTPUT_FILE ${NUM_COLS}x${ROWS}"
+fi
+
+if ! [ -z "$OUTPUT_FILENAME" ]; then
+	OUTPUT_FILE="$OUTPUT_FILENAME"
 fi
 OUTPUT_FILE="${OUTPUT_DIRECTORY}${OUTPUT_FILE}.jpg"
 
