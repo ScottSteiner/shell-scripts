@@ -20,7 +20,7 @@ board=$1
 thread=$2
 savepath=/www/threads/
 case "$board" in
-	3|a|adv|an|b|c|cgl|ck|cm|co|d|diy|e|f|fa|fit|g|gif|h|hc|hm|hr|i|ic|int|jp|k|lit|m|mlp|mu|n|new|o|p|po|pol|q|r|r9k|s|sci|soc|sp|t|tg|toy|trv|tv|u|v|vg|vp|w|wg|wsg|x|y)
+	a|b|c|d|e|f|g|gif|h|hr|k|m|o|p|r|s|t|u|v|vg|vr|w|wg|i|ic|r9k|s4s|cm|hm|lgbt|y|3|adv|an|asp|biz|cgl|ck|co|diy|fa|fit|gd|hc|int|jp|lit|mlp|mu|n|out|po|pol|sci|soc|sp|tg|toy|trv|tv|vp|wsg|x
 		wget --execute robots=off --recursive --convert-links --page-requisites --no-directories --span-hosts --domains=s.4cdn.org,i.4cdn.org,t.4cdn.org --mirror \
 			--quiet --directory-prefix=$savepath$board-$thread --include-directories=* https://boards.4chan.org/$board/res/$thread
 		mv $savepath$board-$thread/$thread $savepath$board-$thread/index.html
