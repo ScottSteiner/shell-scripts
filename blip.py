@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (c) 2012 ScottSteiner <nothingfinerthanscottsteiner@gmail.com>
+# Copyright (c) 2012-2015 ScottSteiner <nothingfinerthanscottsteiner@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,11 @@
 #
 # https://github.com/ScottSteiner/shell-scripts
 import sys, simplejson, urllib, os
-url = sys.argv[1] + "?skin=json"
-downloadurl = simplejson.loads(urllib.urlopen(url).read().replace("]);","").replace("blip_ws_results([{","{"))["Post"]["media"]["url"]
-filename = "~/media/Misc/TV/" + downloadurl.split('/')[-1].split('#')[0].split('?')[0]
+url = '{}?skin=json'.format(sys.argv[1])
+
+clean = urllib.urlopen(url).read().replace(']);','').replace('blip_ws_results([{','{')
+downloadurl = simplejson.loads(clean)['Post']['media']['url']
+
+filename = '~/media/Misc/TV/{}'.format(downloadurl.split('/')[-1].split('#')[0].split('?')[0])
+
 urllib.urlretrieve(downloadurl, os.path.expandvars(os.path.expanduser(filename)))
