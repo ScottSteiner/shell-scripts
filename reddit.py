@@ -29,4 +29,3 @@ for subreddit in subreddits:
 with open('uguubot/plugins/data/nsfw.txt', 'w+') as file:
 	links = list(set(file.read().split('\n') + newlinks))
 	file.write('\n'.join(links))
-	print('\n'.join(links))
