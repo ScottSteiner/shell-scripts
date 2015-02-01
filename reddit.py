@@ -5,7 +5,8 @@ import urllib2
 
 filename = 'uguubot/plugins/data/nsfw.txt'
 subreddits =	['nsfw_html5', 'nsfw_gif', 'fitgirls', 'nsfw', 'nsfw_gfys', 'ass', 'legs', 'boobies', 'nsfw_gfy', 'holdthemoan',\
-		'gravure', 'bustypetite', 'blowjobs', 'porn', 'nsfw_gfys']
+		'gravure', 'bustypetite', 'blowjobs', 'porn', 'nsfw_gfys', 'bustypetite', 'milf', 'cumsluts', 'asianhotties',\
+		'girlsinyogapants', 'nsfwhardcore', 'bimbofetish', 'nsfwcosplay', 'legalteens', 'HappyEmbarrassedGirls']
 
 url = 'http://www.reddit.com/r/{}/top.json?limit=50'
 domains = ['gfycat', 'imgur', 'a.pomf.se', 'mediacru.sh']
