@@ -27,6 +27,6 @@ for subreddit in subreddits:
 			if re.match('.*(?:{}).*'.format('|'.join(domains)), link, re.I):
 				newlinks.append('{} - http://redd.it/{}'.format(link,data['id']))
 
-with open('uguubot/plugins/data/nsfw.txt', 'w+') as file:
+with open(filename, 'w+') as file:
 	links = list(set(file.read().split('\n') + newlinks))
 	file.write('\n'.join(links))
