@@ -17,7 +17,8 @@
 # https://github.com/ScottSteiner/shell-scripts
 
 import requests, sys
-site = 'http://pomf.io/upload.php'
+site = 'http://pomf.cat/upload.php'
+prefix = 'http://a.pomf.cat/'
 
 print('Uploading files: {}'.format(', '.join(sys.argv[1:])))
 for file in sys.argv[1:]:
@@ -25,4 +26,6 @@ for file in sys.argv[1:]:
     content = requests.post(url=site, files={'files[]':f})
   if not content.status_code // 100 == 2:
     raise Exception('Unexpected response {}'.format(content))
-  print('{}: {}'.format(file, content.json()['files'][0]['url']))
+  print(content.json())
+  url = '{}{}'.format(prefix, content.json()['files'][0]['url'])
+  print('{}: {}'.format(file, url))
